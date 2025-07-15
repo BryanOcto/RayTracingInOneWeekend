@@ -3,12 +3,22 @@
 #include "./lib/colour.h"
 #include "./lib/ray.h"
 
-bool hit_sphere(const point3& centre, const double radius, const ray& r) {
+double hit_sphere(const point3& centre, const double radius, const ray& r) {
   const vec3 cq = centre - r.origin();
   const double a = dot(r.direction(), r.direction());
   const double b = dot(-2*r.direction(), cq);
   const double c = dot(cq, cq) - radius*radius;
   const double discriminant = b*b - 4*a*c;
+
+  if (discriminant < 0) {
+    // no solution
+    return -1.0;
+  } else {
+    // return the first (smaller) solution,
+    // assuming for now that's the correct one
+    return (-b - std::sqrt(discriminant))/(2.0*a);
+  }
+
   return (discriminant >= 0);
 }
 
@@ -17,8 +27,11 @@ bool hit_sphere(const point3& centre, const double radius, const ray& r) {
 // }
 
 colour ray_colour(const ray& r) {
-  if (hit_sphere(point3(0, 0, -1), 0.2, r)) {
-    return colour(1, 0, 0); // red sphere
+  const point3 sphere_centre(0, 0, -1);
+  if (double t = hit_sphere(sphere_centre, 0.2, r); t >= 0) {
+    const vec3 normal = unit_vector(r.at(t) - sphere_centre);
+    const vec3 normal_transformed = (normal + vec3(1, 1, 1))/2; // like below, force to 0<=n<=1
+    return colour(normal_transformed.x(), normal_transformed.y(), normal_transformed.z());
   }
 
   const vec3 unit_direction = unit_vector(r.direction());
