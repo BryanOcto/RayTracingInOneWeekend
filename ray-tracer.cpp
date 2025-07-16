@@ -2,13 +2,14 @@
 #include "./lib/vec3.h"
 #include "./lib/colour.h"
 #include "./lib/ray.h"
+#include "./lib/sphere.h"
 
 double hit_sphere(const point3& centre, const double radius, const ray& r) {
   const vec3 cq = centre - r.origin();
-  const double a = dot(r.direction(), r.direction());
-  const double b = dot(-2*r.direction(), cq);
-  const double c = dot(cq, cq) - radius*radius;
-  const double discriminant = b*b - 4*a*c;
+  const double a = r.direction().length_squared();
+  const double h = dot(r.direction(), cq);
+  const double c = cq.length_squared() - radius*radius;
+  const double discriminant = h*h - a*c;
 
   if (discriminant < 0) {
     // no solution
@@ -16,7 +17,7 @@ double hit_sphere(const point3& centre, const double radius, const ray& r) {
   } else {
     // return the first (smaller) solution,
     // assuming for now that's the correct one
-    return (-b - std::sqrt(discriminant))/(2.0*a);
+    return (h - std::sqrt(discriminant))/a;
   }
 
   return (discriminant >= 0);
