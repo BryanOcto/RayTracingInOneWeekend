@@ -2,13 +2,40 @@
 #define SPHERE_H
 
 #include "hittable.h"
-#include "vec3.h"
 
 class sphere : public hittable {
   public:
     sphere(const point3& centre, double radius) : centre{centre}, radius{std::fmax(0, radius)} {}
     bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
-      
+      const vec3 cq = centre - r.origin();
+      const double a = r.direction().length_squared();
+      const double h = dot(r.direction(), cq);
+      const double c = cq.length_squared() - radius*radius;
+      const double discriminant = h*h - a*c;
+
+      // no solution
+      if (discriminant < 0) return false;
+
+      // try the two solutions, with preference to closer one
+      // store the sqrt_discriminant because sqrt is an expensive operation
+      const double sqrt_discriminant = std::sqrt(discriminant);
+      double root = (h - sqrt_discriminant)/a;
+      if (root <= ray_tmin || root >= ray_tmax) {
+        return false;
+        root = (h + sqrt_discriminant)/a;
+        if (root <= ray_tmin || root >= ray_tmax) {
+          return false;
+        }
+      }
+
+      // now we should have a valid root and we populate the hit_record
+      // note we can make the normal a unit vector without using the formula since we know its length is radius based on the geometry of the sphere.
+      rec.p = r.at(root);
+      vec3 outward_normal = (r.at(root) - centre) / radius;
+      rec.set_face_normal(r, outward_normal);
+      rec.t = root;
+
+      return true;
     }
   private:
     point3 centre;
