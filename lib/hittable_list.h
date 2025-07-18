@@ -19,7 +19,7 @@ class hittable_list : public hittable {
       objects.push_back(object);
     }
 
-    bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t_interval, hit_record& rec) const override {
       // more efficient solution: just store closest_t instead of the entire hit_record.
       hit_record curr_rec;
       double closest_so_far = infinity;
@@ -27,7 +27,7 @@ class hittable_list : public hittable {
 
       for (shared_ptr<hittable> object : objects) {
         // it's a pointer so use ->
-        if (!object->hit(r, ray_tmin, ray_tmax, curr_rec)) continue;
+        if (!object->hit(r, ray_t_interval, curr_rec)) continue;
         has_hit = true;
         if (curr_rec.t < closest_so_far) {
           // we got a closer object so replace
