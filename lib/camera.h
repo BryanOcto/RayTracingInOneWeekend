@@ -53,8 +53,8 @@ class camera {
       
       // setup the viewport and camera
       const double focal_length = 1.0;
-      const double viewport_width = 2.0; // arbitrary size
-      const double viewport_height = viewport_width * (double(img_height)/img_width); // calculate from actual aspect ratio from number of pixel rounding.
+      const double viewport_height = 2.0; // arbitrary size
+      const double viewport_width = viewport_height * double(img_width)/img_height; // calculate from actual aspect ratio from number of pixel rounding.
       camera_centre = point3(0, 0, 0);
 
       // calculate V_u (horizontal) and V_v (vertical) across viewport
@@ -86,7 +86,7 @@ class camera {
 
       hit_record rec;
       if (world.hit(r, interval(0.001, infinity), rec)) {
-        vec3 bounce_direction = random_on_hemisphere(rec.normal);
+        vec3 bounce_direction = rec.normal + random_unit_vector();
         return 0.5*ray_colour(ray(rec.p, bounce_direction), depth-1, world);
       }
 
