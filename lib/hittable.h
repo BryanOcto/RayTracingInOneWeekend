@@ -13,7 +13,7 @@ class hit_record {
     void set_face_normal(const ray& r, const vec3& outward_normal) {
       // pointing in opposite directions
       // therefore coming in from the outside 
-      front_face = dot(r.direction(), outward_normal);
+      front_face = dot(r.direction(), outward_normal) < 0; // FORGOT TO ADD < 0
       normal = front_face ? outward_normal : -outward_normal;
       // NOTE: we also assume that outward_normal is a UNIT VECTOR, thus we don't normalize again.
       // this is because it's often easier to normalize when we know the geometry, e.g. with sphere using the radius instead of the whole formula.

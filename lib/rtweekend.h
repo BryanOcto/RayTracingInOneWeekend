@@ -26,10 +26,18 @@ inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.0;
 }
 
+// MISTAKE: we have a *static* distribution and generator,
+// thus we can't just pass in the min and max as arguments
+// rather must make separate function.
 inline double random_double() {
-    static std::uniform_real_distribution<double> distribution(0, 1.0);
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
     static std::mt19937 generator; // this is a good random number generator
     return distribution(generator);
+}
+// MISTAKE: first *scale up* to (max-min) width; we're not normalising here so NOT division
+// then we shift it to min.
+inline double random_double(double min, double max) {
+    return min + (max - min)*random_double();
 }
 
 // Common Headers

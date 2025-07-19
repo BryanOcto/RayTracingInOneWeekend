@@ -21,7 +21,7 @@ class sphere : public hittable {
       const double sqrt_discriminant = std::sqrt(discriminant);
       double root = (h - sqrt_discriminant)/a;
       if (!ray_t_interval.surrounds(root)) {
-        return false;
+        // return false; <-- MISTAKE!!! should only fail if the 2nd one fails too!!!
         root = (h + sqrt_discriminant)/a;
         if (!ray_t_interval.surrounds(root)) {
           return false;
@@ -31,7 +31,7 @@ class sphere : public hittable {
       // now we should have a valid root and we populate the hit_record
       // note we can make the normal a unit vector without using the formula since we know its length is radius based on the geometry of the sphere.
       rec.p = r.at(root);
-      vec3 outward_normal = (r.at(root) - centre) / radius;
+      vec3 outward_normal = (rec.p - centre) / radius;
       rec.set_face_normal(r, outward_normal);
       rec.t = root;
 

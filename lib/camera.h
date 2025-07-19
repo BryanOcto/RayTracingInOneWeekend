@@ -8,6 +8,7 @@ class camera {
     double aspect_ratio = 1.0; // ratio of image width on height
     int img_width = 100; // image width in pixels
     int samples_per_pixel = 10; // for antialiasing
+    int max_depth = 10; // maximum number of times ray bounces in scene
 
     void render(const hittable_list& world) {
       initialise();
@@ -28,7 +29,7 @@ class camera {
           for (int sample_index = 0; sample_index < samples_per_pixel; sample_index++) {
             // get the random ray, and then the colour we get from that
             const ray r = get_ray(i, j);
-            pixel_colour += ray_colour(r, world);
+            pixel_colour += ray_colour(r, max_depth, world);
           }
 
           // find the average of the colours
@@ -76,11 +77,17 @@ class camera {
       pixel_samples_scale = 1.0 / samples_per_pixel;
     }
 
-    colour ray_colour(const ray& r, const hittable& world) const {
+    colour ray_colour(const ray& r, int depth, const hittable& world) const {
+      // If we've reached the bounce limit,
+      // no more light is gathered, thus return black.
+      if (depth <= 0) {
+        return colour(0, 0, 0);
+      }
+
       hit_record rec;
-      if (world.hit(r, interval(0, infinity), rec)) {
-        const vec3 normal_transformed = (rec.normal + vec3(1, 1, 1))/2; // like below, force to 0<=n<=1
-        return colour(normal_transformed.x(), normal_transformed.y(), normal_transformed.z());
+      if (world.hit(r, interval(0.001, infinity), rec)) {
+        vec3 bounce_direction = random_on_hemisphere(rec.normal);
+        return 0.5*ray_colour(ray(rec.p, bounce_direction), depth-1, world);
       }
 
       // we don't have a hit so draw the background
