@@ -47,4 +47,12 @@ class metal : public material {
     double fuzz;
 };
 
+class dialectric : public material {
+  public:
+
+  private:
+  // GET COMMENT FROM WEBSITE
+    double refraction_index;
+}
+
 #endif

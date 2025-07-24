@@ -134,9 +134,16 @@ inline vec3 random_on_hemisphere(const vec3& normal) {
     return vector;
 }
 
-inline vec3 reflect(const vec3&v, const vec3&n) {
+inline vec3 reflect(const vec3& v, const vec3& n) {
     // note from notes, b is -dot(v,n)*n
     return v - 2*dot(v, n)*n;
+}
+
+inline vec3 refract(const vec3& uv, const vec& n, double etai_over_etat) {
+    double cos_theta = std::fmin(dot(-uv, n), 1.0); // fmin just in case I think; assumes uv, n are unit vectors
+    vec3 r_out_perp = etai_over_etat*(uv + uv.length()*cos_theta*n);
+    vec3 r_out_parr = -std::sqrt(1 - r_out_perp * r_out_perp)*n;
+    return r_out_perp + r_out_parr; // this added together is r_out!
 }
 
 #endif
