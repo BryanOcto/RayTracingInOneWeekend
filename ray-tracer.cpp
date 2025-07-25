@@ -12,12 +12,15 @@ int main() {
   
   auto material_ground = make_shared<lambertian>(colour(0.3, 0.4, 0.1));
   auto material_centre = make_shared<lambertian>(colour(0.2, 0.4, 0.8));
-  auto material_left = make_shared<metal>(colour(0.8, 0.8, 0.8), 0.3);
+  // auto material_left = make_shared<metal>(colour(0.8, 0.8, 0.8), 0.3);
+  auto material_left = make_shared<dialectric>(1.5);
+  auto material_bubble = make_shared<dialectric>(1.00/1.50);
   auto material_right = make_shared<metal>(colour(0.9, 0.8, 0.5), 1.0);
 
   world.add(make_shared<sphere>(point3(0, -100.5, -1), 100, material_ground));
   world.add(make_shared<sphere>(point3(0, 0, -1.3), 0.5, material_centre));
   world.add(make_shared<sphere>(point3(-1, 0, -1.3), 0.5, material_left));
+  world.add(make_shared<sphere>(point3(-1, 0, -1.3), 0.4, material_bubble));
   world.add(make_shared<sphere>(point3(1, 0, -1.3), 0.5, material_right));
   
   camera cam;

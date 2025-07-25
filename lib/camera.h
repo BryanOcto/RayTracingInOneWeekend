@@ -10,6 +10,7 @@ class camera {
     int img_width = 100; // image width in pixels
     int samples_per_pixel = 10; // for antialiasing
     int max_depth = 10; // maximum number of times ray bounces in scene
+    double vfov = 90; // vertical field of view (FOV) angle
 
     void render(const hittable_list& world) {
       initialise();
@@ -53,8 +54,12 @@ class camera {
       img_height = std::max(int(img_width/aspect_ratio), 1);
       
       // setup the viewport and camera
+      // viewport_height calculated based on FOV angle
+      // see personal notes for more details on conventions.
       const double focal_length = 1.0;
-      const double viewport_height = 2.0; // arbitrary size
+      const double theta = degrees_to_radians(vfov);
+      const double h = std::tan(theta/2);
+      const double viewport_height = 2.0 * h * focal_length;
       const double viewport_width = viewport_height * double(img_width)/img_height; // calculate from actual aspect ratio from number of pixel rounding.
       camera_centre = point3(0, 0, 0);
 
