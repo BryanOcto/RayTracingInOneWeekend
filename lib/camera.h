@@ -10,7 +10,11 @@ class camera {
     int img_width = 100; // image width in pixels
     int samples_per_pixel = 10; // for antialiasing
     int max_depth = 10; // maximum number of times ray bounces in scene
+
     double vfov = 90; // vertical field of view (FOV) angle
+    point3 lookfrom = point3(0, 0, 0);
+    point3 lookat = point3(0, 0, -1);
+    vec3 vup = vec3(0, 1, 0);
 
     void render(const hittable_list& world) {
       initialise();
@@ -48,6 +52,7 @@ class camera {
     vec3 pixel_delta_u; // horizontal distance between pixel centres
     vec3 pixel_delta_v; // vertical distance between pixel centres
     double pixel_samples_scale; // scaling factor 
+    vec3 u, v, w; // basis vectors defining the orthonormal camera basis; u, v for horizontal, vertical on the viewing plane, -w for direction camera is looking in.
 
     void initialise() {
       // setup the image
@@ -56,16 +61,21 @@ class camera {
       // setup the viewport and camera
       // viewport_height calculated based on FOV angle
       // see personal notes for more details on conventions.
-      const double focal_length = 1.0;
+      const double focal_length = (lookfrom - lookat).length();
       const double theta = degrees_to_radians(vfov);
       const double h = std::tan(theta/2);
       const double viewport_height = 2.0 * h * focal_length;
       const double viewport_width = viewport_height * double(img_width)/img_height; // calculate from actual aspect ratio from number of pixel rounding.
-      camera_centre = point3(0, 0, 0);
+      camera_centre = lookfrom;
+
+      // calculate the u, v, w unit vectors
+      w = unit_vector(lookfrom - lookat); // remember we're looking in the direction of -w. This is also critical in deducing the other vector directions.
+      u = unit_vector(cross(vup, w));
+      v = cross(w, u);
 
       // calculate V_u (horizontal) and V_v (vertical) across viewport
-      const vec3 viewport_u = vec3(viewport_width, 0, 0);
-      const vec3 viewport_v = vec3(0, -viewport_height, 0);
+      const vec3 viewport_u = viewport_width * u;
+      const vec3 viewport_v = viewport_height * -v; // remember this should be facing down.
 
       // calculate delta_u and delta_v (distance between pixel centres)
       pixel_delta_u = viewport_u/img_width;
@@ -73,7 +83,7 @@ class camera {
 
       // calculate location of top-left pixel and viewport corner
       // BLUNDER: it's -1 on z not on x
-      const point3 viewport_centre = focal_length*vec3(0, 0, -1);
+      const point3 viewport_centre = camera_centre - focal_length*w; // looking from the camera and travelling along the focal_length to the plane 
       const point3 viewport_upper_left = viewport_centre - viewport_u/2 - viewport_v/2;
       pixel_00_loc = viewport_upper_left + pixel_delta_u/2 + pixel_delta_v/2;
 
