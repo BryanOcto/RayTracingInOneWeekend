@@ -107,6 +107,14 @@ inline vec3 unit_vector(const vec3& v) {
     return v / v.length();
 }
 
+inline vec3 random_in_unit_disk() {
+    vec3 point = vec3(random_double(-1, 1), random_double(-1, 1), 0);
+    while (point.length_squared() >= 1) {
+        point = vec3(random_double(-1, 1), random_double(-1, 1), 0);
+    }
+    return point;
+}
+
 inline vec3 random_unit_vector() {
     // alternative solution is to do while(true) and breaking by returning.
     // avoids this code duplication below.

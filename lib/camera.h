@@ -16,6 +16,9 @@ class camera {
     point3 lookat = point3(0, 0, -1);
     vec3 vup = vec3(0, 1, 0);
 
+    double defocus_angle = 0; // angle of the cone from a point on the plane of perfect focus to the disk at `lookfrom`. Similar to vfov in how it's measured if you just cut a cross-section through the cone (it's symmetrical so doesn't matter where you do that).
+    double focus_dist = 10; // distance from `lookfrom` to plane of perfect focus
+
     void render(const hittable_list& world) {
       initialise();
 
@@ -53,6 +56,8 @@ class camera {
     vec3 pixel_delta_v; // vertical distance between pixel centres
     double pixel_samples_scale; // scaling factor 
     vec3 u, v, w; // basis vectors defining the orthonormal camera basis; u, v for horizontal, vertical on the viewing plane, -w for direction camera is looking in.
+    vec3 defocus_disk_u; // defocus disk horizontal radius
+    vec3 defocus_disk_v; // defocus disk vertical radius
 
     void initialise() {
       // setup the image
@@ -61,10 +66,9 @@ class camera {
       // setup the viewport and camera
       // viewport_height calculated based on FOV angle
       // see personal notes for more details on conventions.
-      const double focal_length = (lookfrom - lookat).length();
       const double theta = degrees_to_radians(vfov);
       const double h = std::tan(theta/2);
-      const double viewport_height = 2.0 * h * focal_length;
+      const double viewport_height = 2.0 * h * focus_dist;
       const double viewport_width = viewport_height * double(img_width)/img_height; // calculate from actual aspect ratio from number of pixel rounding.
       camera_centre = lookfrom;
 
@@ -83,9 +87,14 @@ class camera {
 
       // calculate location of top-left pixel and viewport corner
       // BLUNDER: it's -1 on z not on x
-      const point3 viewport_centre = camera_centre - focal_length*w; // looking from the camera and travelling along the focal_length to the plane 
+      const point3 viewport_centre = camera_centre - focus_dist*w; // looking from the camera and travelling along the focal_length to the plane 
       const point3 viewport_upper_left = viewport_centre - viewport_u/2 - viewport_v/2;
       pixel_00_loc = viewport_upper_left + pixel_delta_u/2 + pixel_delta_v/2;
+
+      // calculate the camera defocus disk basis vectors.
+      const double defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle)/2);
+      defocus_disk_u = u * defocus_radius;
+      defocus_disk_v = v * defocus_radius;
 
       // calculate pixel sample scaling factor
       // MISTAKE: need to force a cast to double with 1.0;
@@ -124,16 +133,17 @@ class camera {
     }
 
     ray get_ray(int i, int j) const {
-      // get a ray from the camera centre towards a random point within the pixel i, j
+      // get a ray from a random point on the defocus disk towards a random point within the pixel i, j
       // MISTAKE: offset must be scaled by the delta.
       const vec3 offset = sample_square();
       const point3 random_loc_in_pixel = pixel_00_loc 
         + (j+offset.x())*pixel_delta_u
         + (i+offset.y())*pixel_delta_v;
       
-      const vec3 ray_direction = random_loc_in_pixel - camera_centre;
+      const vec3 ray_origin = (defocus_angle <= 0) ? camera_centre : defocus_disk_sample();
+      const vec3 ray_direction = random_loc_in_pixel - ray_origin;
 
-      return ray(camera_centre, ray_direction);
+      return ray(ray_origin, ray_direction);
     }
 
     vec3 sample_square() const {
@@ -141,6 +151,13 @@ class camera {
       // keeping z fixed at 0
       // namely x in [-0.5, 0.5], y in [-0.5, 0.5]
       return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    point3 defocus_disk_sample() const {
+      // returns a point within the defocus disk at the camera
+      // logic: get a random point in this unit disk, then use the defocus_disk_u and defocus_disk_v that spans across the whole disk to scale the components appropriately.
+      const point3 p = random_in_unit_disk();
+      return camera_centre + (defocus_disk_u * p[0]) + (defocus_disk_v * p[1]);
     }
 };
 
